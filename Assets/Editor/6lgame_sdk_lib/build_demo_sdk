@@ -1,0 +1,27 @@
+#!/bin/bash
+
+JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home/bin"
+ANDROID_LIB="/Volumes/Data/Setup/android-sdk/platforms/android-19/android.jar"
+UNITY_ANDROID_LIB="/Applications/Unity/Unity.app/Contents/PlaybackEngines/AndroidPlayer/development/bin/classes.jar"
+WORKING_PATH="/Volumes/Data/Projects/Unity/9fury/LiuLian_LL_Sdk_Demo/Assets"
+SRC_PATH="${WORKING_PATH}/Editor/6lgame_sdk_lib/src/com/nfury/liulian/*.java"
+OUTPUT_CLASSES_PATH="${WORKING_PATH}/Editor/6lgame_sdk_lib/classes"
+OUTPUT_JAR_PATH="${WORKING_PATH}/Plugins/Android/LiulianSocial.jar"
+
+echo ">>> Clear $OUTPUT_CLASSES_PATH"
+cd $OUTPUT_CLASSES_PATH
+rm -rf *
+echo ">>> Build ...."
+"${JAVA_HOME}/javac" -verbose -classpath "${ANDROID_LIB}:${UNITY_ANDROID_LIB}:${WORKING_PATH}/Plugins/Android/6lgame_sdk_lib/libs/*" -d $OUTPUT_CLASSES_PATH $SRC_PATH
+echo ">>> Pack jar file ...."
+"${JAVA_HOME}/jar" cvf $OUTPUT_JAR_PATH .
+rm -rf *
+
+# /Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home/bin/javac -classpath /Volumes/Data/Setup/android-sdk/platforms/android-19/android.jar:/Applications/Unity/Unity.app/Contents/PlaybackEngines/AndroidPlayer/development/bin/classes.jar:/Volumes/Data/Projects/Unity/9fury/LiuLian_LL_Sdk_Demo/Assets/Plugins/Android/6lgame_sdk_lib/libs/* -d /Volumes/Data/Projects/Unity/9fury/LiuLian_LL_Sdk_Demo/Assets/Editor/6lgame_sdk_lib/output/ /Volumes/Data/Projects/Unity/9fury/LiuLian_LL_Sdk_Demo/Assets/Editor/6lgame_sdk_lib/src/com/liuliansdkdemo/liulian/*.java
+
+# cd /Volumes/Data/Projects/Unity/9fury/LiuLian_LL_Sdk_Demo/Assets/Editor/6lgame_sdk_lib/output/
+
+# /Volumes/Data/Projects/Unity/9fury/LiuLian_LL_Sdk_Demo/Assets/Plugins/Android/liulian
+# /Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home/bin/jar cvf /Volumes/Data/Projects/Unity/9fury/LiuLian_LL_Sdk_Demo/Assets/Plugins/Android/6lgame_sdk_lib/LiulianSocial.jar *
+
+
