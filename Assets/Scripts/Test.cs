@@ -3,6 +3,9 @@ using System.Collections;
 
 public class Test : MonoBehaviour {
 	string activityName = "NONE";
+
+
+
 	void OnGUI()
 	{
 		if(GUI.Button(new Rect(0,0,Screen.width, 100), "Init")){
@@ -13,6 +16,17 @@ public class Test : MonoBehaviour {
 			Login();
 		}
 
+		if(GUI.Button(new Rect(0,200,Screen.width, 100), "Exit")){
+			Exit();
+		}
+
+		if(GUI.Button(new Rect(0,300,Screen.width, 100), "ReportGameRole")){
+			ReportGameRole();
+		}
+
+		if(GUI.Button(new Rect(0,400,Screen.width, 100), "Buy")){
+			Buy();
+		}
 
 		GUI.Label(new Rect(0,Screen.height/2, Screen.width, 100), activityName);
 	}
@@ -32,6 +46,30 @@ public class Test : MonoBehaviour {
 	void Login ()
 	{
 		LiuLian.Login();
+	}
+
+	void Exit ()
+	{
+		LiuLian.Exit();
+	}
+
+	void ReportGameRole ()
+	{
+		string sid = "12873";
+		string sname = "测试服务器";
+		string uid = "1001";
+		string uname = "山财";
+		string ulevel = "52";
+		LiuLian.ReportGameRole(sid, sname, uid, uname, ulevel);
+	}
+
+	void Buy ()
+	{
+		string pname = "商品名称";
+		string sid = "1";
+		string uid = "15001424";
+		string uname = "iWgang";
+		LiuLian.Buy(pname, sid, uid, uname, 1);
 	}
 
 	public void Callback(string message)

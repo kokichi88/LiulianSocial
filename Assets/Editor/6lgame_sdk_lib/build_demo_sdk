@@ -3,11 +3,10 @@
 JAVA_HOME="/Library/Java/JavaVirtualMachines/jdk1.7.0_51.jdk/Contents/Home/bin"
 ANDROID_LIB="/Volumes/Data/Setup/android-sdk/platforms/android-19/android.jar"
 UNITY_ANDROID_LIB="/Applications/Unity/Unity.app/Contents/PlaybackEngines/AndroidPlayer/development/bin/classes.jar"
-WORKING_PATH="/Volumes/Data/Projects/Unity/9fury/LiuLian_LL_Sdk_Demo/Assets"
+WORKING_PATH="/Volumes/Data/Projects/Unity/9fury/LiulianSocial/Assets"
 SRC_PATH="${WORKING_PATH}/Editor/6lgame_sdk_lib/src/com/nfury/liulian/*.java"
 OUTPUT_CLASSES_PATH="${WORKING_PATH}/Editor/6lgame_sdk_lib/classes"
 OUTPUT_JAR_PATH="${WORKING_PATH}/Plugins/Android/LiulianSocial.jar"
-
 echo ">>> Clear $OUTPUT_CLASSES_PATH"
 cd $OUTPUT_CLASSES_PATH
 rm -rf *
