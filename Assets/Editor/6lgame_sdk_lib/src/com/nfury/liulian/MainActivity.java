@@ -10,9 +10,10 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
+import android.view.KeyEvent;
 import android.view.View.OnClickListener;
 import android.widget.Toast;
-
+import org.json.JSONObject;
 import com.cd.ll.game.sdk.SDKCallBackListener;
 import com.cd.ll.game.sdk.SDKCallbackListenerNullException;
 import com.liulian.game.sdk.LiuLianOrientation;
@@ -22,8 +23,9 @@ import com.liulian.game.sdk.SdkManager;
 import com.liulian.game.sdk.data.bean.GameRoleInfo;
 
 public class MainActivity extends UnityPlayerActivity {
-	private static String UNITY_LOG_TAG = "Unity";
+	private static String UNITY_LOG_TAG = "Unity_Bridge";
 	private boolean isNotLogin = true;
+	private boolean isDebug = true;
 	private String objectCallback = "";
 	private String functionCallback = "";
 
@@ -51,42 +53,23 @@ public class MainActivity extends UnityPlayerActivity {
 			// 设置榴莲 SDK 调试模式是否开启
 			// 设置true表示目前在测试环境中，正式上线时请修改为false
 			// liulianSdkSetting.setDEBUG(true);
+			this.isDebug = isDebug;
 			liulianSdkSetting.setDEBUG(isDebug);
 			objectCallback = objCallback;
 			functionCallback = fnCallback;
 			// LiuLianOrientation.PORTRAIT 竖屏
 			// LiuLianOrientation.LANDSCAPE 横屏
 			liulianSdkSetting.setOrientation(LiuLianOrientation.LANDSCAPE);
-			Log.d(UNITY_LOG_TAG, "initSDK " +  appId + " "  + appPubKey + " " + appPriKey + " "+ isDebug + " " + objCallback);
+			log(UNITY_LOG_TAG, "initSDK " +  appId + " "  + appPubKey + " " + appPriKey + " "+ isDebug + " " + objCallback);
 			SdkManager.defaultSDK().initSDK(this, liulianSdkSetting,
 					new SDKCallBackListener() {
 						@Override
 						public void callBack(int code, String msg) {
-							switch (code) {
-							case SDKStatusCode.INIT_SUCC:
-								// 初始化成功
-								// showToast("INIT_SUCC: msg=" + msg);
-								sendUnityMessage(msg);
-								// 登录
-								break;
-							case SDKStatusCode.INIT_FAIL:
-								// 初始化失败
-								// showToast("INIT_FAIL: msg=" + msg);
-								sendUnityMessage(msg);
-								break;
-							default:
-								// 初始化失败（其它错误）
-								String pMsg = String.format(
-										Locale.getDefault(),
-										"Default：code=%d _ msg=%s", code, msg);
-								// showToastLong(pMsg);
-								sendUnityMessage(pMsg);
-								break;
-							}
+							sendUnityMessage(code, msg);
 						}
 					});
 		} catch (SDKCallbackListenerNullException e) {
-			Log.d(UNITY_LOG_TAG, e.getMessage());
+			log(UNITY_LOG_TAG, e.getMessage());
 		}
 
 		// 当用户登出监听回调
@@ -95,7 +78,7 @@ public class MainActivity extends UnityPlayerActivity {
 			public void callBack(int code, String msg) {
 				if (code == SDKStatusCode.LOGOUT) {
 					showToast("游戏登出了，cp主动再调起登录");
-					doLogin();
+					sendUnityMessage(code, msg);
 				}
 			}
 		});
@@ -103,8 +86,7 @@ public class MainActivity extends UnityPlayerActivity {
 
 	// 登录
 	public void doLogin() {
-		isNotLogin = true;
-		Log.d(UNITY_LOG_TAG, "do Login");
+		log(UNITY_LOG_TAG, "do Login");
 		this.runOnUiThread(new Runnable() {
 		    public void run() {
 		        try {
@@ -112,39 +94,14 @@ public class MainActivity extends UnityPlayerActivity {
 							new SDKCallBackListener() {
 								@Override
 								public void callBack(int code, String msg) {
-									switch (code) {
-									case SDKStatusCode.LOGIN_SUCCESS:
-										if (isNotLogin) {
-											// 正常登录
-											isNotLogin = false;
-											showToastLong("LOGIN_SUCCESS：msg=" + msg);
-											// 显示悬浮窗
-											SdkManager.defaultSDK().showFloatingButton(
-													MainActivity.this);
-										} else {
-											// 切换账号回调
-											showToastLong("ALREADY LOGIN：msg=" + msg);
-										}
-										sendUnityMessage(code + " " + msg);
-										break;
-									case SDKStatusCode.LOGIN_CANCEL:
-										// 取消登录
-										showToastLong("LOGIN_CANCEL=" + msg);
-										sendUnityMessage(msg);
-										break;
-									default:
-										// 登录错误，判断相关信息
-										String pMsg = String.format(
-												Locale.getDefault(),
-												"DEFAULT：code=%d _ msg=%s", code, msg);
-										showToastLong(pMsg);
-										sendUnityMessage(pMsg);
-										break;
+									if (code == SDKStatusCode.LOGIN_SUCCESS) {
+										SdkManager.defaultSDK().showFloatingButton(MainActivity.this);
 									}
+									sendUnityMessage(code, msg);
 								}
 							});
 				} catch (SDKCallbackListenerNullException e) {
-					Log.d(UNITY_LOG_TAG, e.getMessage());
+					log(UNITY_LOG_TAG, e.getMessage());
 				}
 		    }
 		});
@@ -152,22 +109,20 @@ public class MainActivity extends UnityPlayerActivity {
 	}
 
 	public void doExit() {
-		Log.d(UNITY_LOG_TAG, "do Exit");
+		log(UNITY_LOG_TAG, "do Exit");
 		this.runOnUiThread(new Runnable() {
 		    public void run() {
 		    	SdkManager.defaultSDK().exitGame(MainActivity.this, new SDKCallBackListener() {
 					@Override
-					public void callBack(int code, String msg) {
+					public void callBack(final int code,final String msg) {
 						switch (code) {
 						case SDKStatusCode.GAME_EXIT_SUCCESS:
-							// 真正退出
-							// finish();
-							// android.os.Process.killProcess(android.os.Process.myPid());
-							showToast("SDKStatusCode.GAME_EXIT_SUCCESS " + msg);
+							sendUnityMessage(code, msg);
+							finish();
+							android.os.Process.killProcess(android.os.Process.myPid());
 							break;
 						case SDKStatusCode.GAME_EXIT_UNTREATED:
 							// TODO SDK没有处理退出，游戏可以直接finish()或者用自己的退出dialog
-							showToast("SDKStatusCode.GAME_EXIT_UNTREATED " + msg);
 							new AlertDialog.Builder(MainActivity.this)
 									.setMessage("是否退出游戏？")
 									.setNegativeButton("取消",
@@ -188,6 +143,7 @@ public class MainActivity extends UnityPlayerActivity {
 												public void onClick(
 														DialogInterface dialog,
 														int which) {
+													sendUnityMessage(code, msg);
 													MainActivity.this.finish();
 													android.os.Process
 															.killProcess(android.os.Process
@@ -196,8 +152,7 @@ public class MainActivity extends UnityPlayerActivity {
 											}).create().show();
 							break;
 						case SDKStatusCode.GAME_EXIT_CANCEL:
-							// 取消退出
-							showToast("SDKStatusCode.GAME_EXIT_CANCEL");
+							sendUnityMessage(code, msg);
 							break;
 						}
 					}
@@ -210,7 +165,7 @@ public class MainActivity extends UnityPlayerActivity {
 
 	// 上传角色信息
 	public void reportGameRole(String sid, String sname, String uid, String uname, String ulevel) {
-		Log.d(UNITY_LOG_TAG, "reportGameRole " + sid + " " + sname + " " + uid + " " + uname + " " + ulevel);
+		log(UNITY_LOG_TAG, "reportGameRole " + sid + " " + sname + " " + uid + " " + uname + " " + ulevel);
 		try {
 			GameRoleInfo gameRoleInfo = new GameRoleInfo();
 			gameRoleInfo.setServerId(sid);
@@ -223,19 +178,7 @@ public class MainActivity extends UnityPlayerActivity {
 					gameRoleInfo, new SDKCallBackListener() {
 						@Override
 						public void callBack(int code, String msg) {
-							switch (code) {
-							case SDKStatusCode.GAME_ROLE_SUCCESS:
-								Toast.makeText(MainActivity.this,
-										"GAME_ROLE_SUCCESS:" + msg, Toast.LENGTH_LONG)
-										.show();
-								break;
-							case SDKStatusCode.GAME_ROLE_FAIL:
-								Toast.makeText(MainActivity.this,
-										"GAME_ROLE_FAIL:" + msg, Toast.LENGTH_LONG)
-										.show();
-								break;
-							}
-
+							sendUnityMessage(code,msg);
 						}
 					});
 		} catch (SDKCallbackListenerNullException e) {
@@ -244,29 +187,17 @@ public class MainActivity extends UnityPlayerActivity {
 	}
 
 	// 支付
-	public void doBuy(final String pname, final String sid, final String uid, final String uname, final float money) {
-		Log.d(UNITY_LOG_TAG, "doBuy " + pname + " " + sid + " " + uid + " " + uname + " " + money);
+	public void doBuy(final String pname, final String sid, final String uid, final String uname, final float money, final String payload) {
+		log(UNITY_LOG_TAG, "doBuy " + pname + " " + sid + " " + uid + " " + uname + " " + money + " " + payload);
 		// 透传数据,SDK不做任何处理会通过服务器充值回调接口直接返回给游戏服务器
-		final String extInfo = "透传数据563072113f650a589c8fe31c";
 		this.runOnUiThread(new Runnable() {
 		    public void run() {
 		    	try {
 					SdkManager.defaultSDK().pay(MainActivity.this, money, pname, sid,
-							uid, uname, extInfo, new SDKCallBackListener() {
+							uid, uname, payload, new SDKCallBackListener() {
 								@Override
 								public void callBack(int code, String msg) {
-									switch (code) {
-									case SDKStatusCode.PAY_SUCCESS:
-										// 支付成功
-										showToast("PAY_SUCCESS " + msg);
-										break;
-									case SDKStatusCode.PAY_ERROR:
-										showToastLong("PAY_ERROR：msg=" + msg);
-										break;
-									case SDKStatusCode.PAY_CANCEL:
-										showToast("PAY_CANCEL " + msg);
-										break;
-									}
+									sendUnityMessage(code, msg);
 								}
 							});
 				} catch (SDKCallbackListenerNullException e) {
@@ -275,6 +206,17 @@ public class MainActivity extends UnityPlayerActivity {
 			}
 		});
 		
+	}
+
+	@Override
+	public boolean onKeyDown(int keyCode, KeyEvent event) {
+		log(UNITY_LOG_TAG, "onKeyDown " + keyCode);
+		if(keyCode == KeyEvent.KEYCODE_BACK) {
+			log(UNITY_LOG_TAG, "onBackPressed Called");
+			doExit();
+			return true;
+		} 
+		return super.onKeyDown(keyCode, event);
 	}
 
 	@Override
@@ -333,9 +275,22 @@ public class MainActivity extends UnityPlayerActivity {
 		Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
 	}
 
-	private void sendUnityMessage(String message) {
-		Log.d(UNITY_LOG_TAG, "sendUnityMessage " + objectCallback + ":" + functionCallback + " " + message);
-		UnityPlayer.UnitySendMessage(objectCallback, functionCallback, message);
+	private void log(String tag, String msg) {
+		if(isDebug) {
+			Log.d(tag, msg);
+		}
+	}
+
+	private void sendUnityMessage(int code, String message) {
+		try {
+            JSONObject dataset = new JSONObject();
+			dataset.put("code", code);
+			dataset.put("msg", message);
+			log(UNITY_LOG_TAG, "sendUnityMessage " + objectCallback + ":" + functionCallback + " " + dataset.toString());
+			UnityPlayer.UnitySendMessage(objectCallback, functionCallback, dataset.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 	}
 
 }
