@@ -5,6 +5,8 @@ using System.Collections.Generic;
 namespace nfury.liulian
 {
 	public sealed class LiuLian  {
+		private const float CALL_EXIT_INTERVAL = 1;
+		private static float lastimeCallExit = -1;
 		private static AndroidJavaObject sdkImpl;
 		private static bool isInitiated = false;
 		public static Dictionary<int,HandlerMessage> handlers = new Dictionary<int, HandlerMessage>(); 
@@ -84,12 +86,16 @@ namespace nfury.liulian
 		
 		public static void Exit()
 		{
-			if(isInitiated)
+			if(Time.timeSinceLevelLoad - lastimeCallExit > CALL_EXIT_INTERVAL)
 			{
-				sdkImpl.Call("doExit");
-			}else
-			{
-				throw new Exception("You have to initiate sdk before Exit");
+				lastimeCallExit = Time.timeSinceLevelLoad;
+				if(isInitiated)
+				{
+					sdkImpl.Call("doExit");
+				}else
+				{
+					Debug.LogWarning("You have to initiate sdk before Exit");
+				}
 			}
 		}
 		

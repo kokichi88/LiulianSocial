@@ -26,6 +26,14 @@ public class Test : MonoBehaviour {
 			Buy();
 		}
 
+		if (Input.GetKeyUp(KeyCode.Escape))
+		{
+			if (Application.platform == RuntimePlatform.Android)
+			{
+				Exit();
+			}
+		}
+
 		GUI.Label(new Rect(0,Screen.height/2, Screen.width, 100), output);
 	}
 
